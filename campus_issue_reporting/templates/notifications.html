@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Campus Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-subtitle">Updates regarding your reported or assigned campus issues</p>
+    </div>
+    {% if unread_notifications_count > 0 %}
+    <div>
+        <form action="{{ url_for('mark_all_notifications_read') }}" method="POST">
+            <button type="submit" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-check-double"></i> Mark All as Read
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    {% if notifications %}
+    <div style="display: flex; flex-direction: column;">
+        {% for item in notifications %}
+        <div class="notification-item {% if not item.is_read %}unread{% endif %}">
+            <div class="notification-icon">
+                {% if 'resolved' in item.message|lower %}
+                <i class="fa-solid fa-circle-check" style="color: #27ae60;"></i>
+                {% elif 'assigned' in item.message|lower %}
+                <i class="fa-solid fa-user-check" style="color: #2980b9;"></i>
+                {% elif 'progress' in item.message|lower %}
+                <i class="fa-solid fa-spinner" style="color: #8e44ad;"></i>
+                {% else %}
+                <i class="fa-solid fa-bell" style="color: var(--accent-color);"></i>
+                {% endif %}
+            </div>
+            <div class="notification-body">
+                <div style="font-size: 0.95rem; color: var(--primary-color); font-weight: 500;">
+                    {{ item.message }}
+                </div>
+                <div class="notification-time">
+                    <i class="fa-regular fa-clock"></i> {{ item.created_at }}
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('issue_details', issue_id=item.issue_id) }}" class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-arrow-right"></i> View Issue
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <i class="fa-solid fa-bell-slash" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #cbd5e1;"></i>
+        <h3>No Notifications</h3>
+        <p>You have no notifications at this time.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

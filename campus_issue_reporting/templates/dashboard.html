@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Campus Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back, {{ current_user.name }} ({{ current_user.role }})</p>
+    </div>
+    {% if current_user.role in ['Student', 'Faculty'] %}
+    <div>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus-circle"></i> Report New Issue
+        </a>
+    </div>
+    {% elif current_user.role in ['Manager', 'Maintenance Staff'] %}
+    <div>
+        <a href="{{ url_for('all_issues') }}" class="btn btn-primary">
+            <i class="fa-solid fa-list-check"></i> View All Campus Issues
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- STATS CARDS GRID -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Total Issues</h3>
+            <div class="stat-value">{{ stats.total }}</div>
+        </div>
+        <div class="stat-icon icon-total">
+            <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+    </div>
+
+    {% if current_user.role != 'Maintenance Staff' %}
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Pending</h3>
+            <div class="stat-value">{{ stats.pending }}</div>
+        </div>
+        <div class="stat-icon icon-pending">
+            <i class="fa-solid fa-hourglass-start"></i>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.role in ['Manager', 'Maintenance Staff'] %}
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Assigned</h3>
+            <div class="stat-value">{{ stats.assigned }}</div>
+        </div>
+        <div class="stat-icon icon-assigned">
+            <i class="fa-solid fa-user-check"></i>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>In Progress</h3>
+            <div class="stat-value">{{ stats.in_progress }}</div>
+        </div>
+        <div class="stat-icon icon-in-progress">
+            <i class="fa-solid fa-spinner"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Resolved</h3>
+            <div class="stat-value">{{ stats.resolved }}</div>
+        </div>
+        <div class="stat-icon icon-resolved">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+    </div>
+</div>
+
+<!-- DASHBOARD GRID CONTENT -->
+<div class="dashboard-grid">
+    <!-- LEFT: RECENT ISSUES LIST -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                {% if current_user.role == 'Maintenance Staff' %}
+                Assigned Maintenance Tasks
+                {% else %}
+                Recent Reported Issues
+                {% endif %}
+            </h2>
+            {% if current_user.role in ['Student', 'Faculty'] %}
+            <a href="{{ url_for('my_issues') }}" class="btn btn-sm btn-secondary">View All My Issues</a>
+            {% elif current_user.role == 'Manager' %}
+            <a href="{{ url_for('all_issues') }}" class="btn btn-sm btn-secondary">View All Issues</a>
+            {% endif %}
+        </div>
+
+        {% if recent_issues %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in recent_issues %}
+                    <tr>
+                        <td><strong>#{{ issue.id }}</strong></td>
+                        <td>{{ issue.category }}</td>
+                        <td>{{ issue.location }}</td>
+                        <td>
+                            <span class="badge badge-{{ issue.priority|lower }}">
+                                {{ issue.priority }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ issue.status|lower|replace(' ', '-') }}">
+                                {{ issue.status }}
+                            </span>
+                        </td>
+                        <td>{{ issue.created_at[:10] }}</td>
+                        <td>
+                            <a href="{{ url_for('issue_details', issue_id=issue.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: #cbd5e1;"></i>
+            <p>No issues recorded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT: STATUS CHART & QUICK INFO -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Issue Status Distribution</h2>
+            </div>
+            <div style="padding: 0.5rem; text-align: center;">
+                <canvas id="statusChartCanvas" width="280" height="230"></canvas>
+            </div>
+        </div>
+
+        {% if current_user.role == 'Manager' and maintenance_staff_list %}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Active Maintenance Staff</h2>
+            </div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+                {% for staff in maintenance_staff_list %}
+                <li style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                    <i class="fa-solid fa-user-gear" style="color: var(--accent-color);"></i>
+                    <span style="font-weight: 500;">{{ staff.name }}</span>
+                    <span style="margin-left: auto; font-size: 0.75rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">Staff</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if current_user.role == 'Maintenance Staff' %}
+    const chartData = [
+        { label: 'Assigned', value: {{ stats.assigned }}, color: '#2980b9' },
+        { label: 'In Progress', value: {{ stats.in_progress }}, color: '#8e44ad' },
+        { label: 'Resolved', value: {{ stats.resolved }}, color: '#27ae60' }
+    ];
+    {% elif current_user.role == 'Manager' %}
+    const chartData = [
+        { label: 'Pending', value: {{ stats.pending }}, color: '#f39c12' },
+        { label: 'Assigned', value: {{ stats.assigned }}, color: '#2980b9' },
+        { label: 'In Progress', value: {{ stats.in_progress }}, color: '#8e44ad' },
+        { label: 'Resolved', value: {{ stats.resolved }}, color: '#27ae60' }
+    ];
+    {% else %}
+    const chartData = [
+        { label: 'Pending', value: {{ stats.pending }}, color: '#f39c12' },
+        { label: 'In Progress', value: {{ stats.in_progress }}, color: '#8e44ad' },
+        { label: 'Resolved', value: {{ stats.resolved }}, color: '#27ae60' }
+    ];
+    {% endif %}
+
+    renderStatusChart('statusChartCanvas', chartData);
+});
+</script>
+{% endblock %}

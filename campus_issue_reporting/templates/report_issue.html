@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Report Issue - Campus Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Report New Issue</h1>
+        <p class="page-subtitle">Submit campus maintenance or infrastructure issues for resolution</p>
+    </div>
+    <div>
+        <a href="{{ url_for('my_issues') }}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Back to My Issues
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 750px; margin: 0 auto;">
+    <form action="{{ url_for('report_issue') }}" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label class="form-label" for="category">Issue Category <span style="color:red;">*</span></label>
+            <select id="category" name="category" class="form-select" required>
+                <option value="" disabled selected>Select Category</option>
+                <option value="Electrical">Electrical (Lights, Switches, Outlets)</option>
+                <option value="Plumbing">Plumbing (Leaks, Taps, Restrooms)</option>
+                <option value="Furniture">Furniture (Desks, Chairs, Benches)</option>
+                <option value="IT / Network">IT / Network (Wi-Fi, Projector, PC)</option>
+                <option value="Cleaning & Sanitation">Cleaning & Sanitation</option>
+                <option value="Building & Repair">Building & Repair (Doors, Windows, Walls)</option>
+                <option value="Air Conditioning">Air Conditioning / HVAC</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="location">Location <span style="color:red;">*</span></label>
+            <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Science Block B, Room 302 / Library 1st Floor" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="priority">Priority Level <span style="color:red;">*</span></label>
+            <select id="priority" name="priority" class="form-select" required>
+                <option value="Low">Low - Minor issue, no immediate hindrance</option>
+                <option value="Medium" selected>Medium - Normal operational priority</option>
+                <option value="High">High - Affects multiple students/class activities</option>
+                <option value="Urgent">Urgent - Safety hazard or critical disruption</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="description">Detailed Description <span style="color:red;">*</span></label>
+            <textarea id="description" name="description" class="form-control" placeholder="Please describe the issue clearly..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="imageInput">Attach Photo (Optional)</label>
+            <input type="file" id="imageInput" name="image" class="form-control" accept="image/*">
+            <small style="color: var(--text-muted); display: block; margin-top: 4px;">Supported formats: PNG, JPG, JPEG, GIF, WEBP (Max 16MB)</small>
+            
+            <img id="imagePreview" src="" alt="Preview" class="issue-image" style="display: none; margin-top: 10px; max-height: 200px;">
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-paper-plane"></i> Submit Issue Report
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

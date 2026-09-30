@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}My Issues - Campus Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">My Reported Issues</h1>
+        <p class="page-subtitle">Track the status of your reported campus maintenance issues</p>
+    </div>
+    <div>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus-circle"></i> Report New Issue
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    {% if issues %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Issue ID</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Assigned Staff</th>
+                    <th>Reported Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr>
+                    <td><strong>#{{ issue.id }}</strong></td>
+                    <td>{{ issue.category }}</td>
+                    <td>{{ issue.location }}</td>
+                    <td>
+                        <span class="badge badge-{{ issue.priority|lower }}">
+                            {{ issue.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ issue.status|lower|replace(' ', '-') }}">
+                            {{ issue.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if issue.assigned_staff_name %}
+                        <span style="font-size: 0.85rem; color: var(--text-color);"><i class="fa-solid fa-user-gear"></i> {{ issue.assigned_staff_name }}</span>
+                        {% else %}
+                        <span style="font-size: 0.82rem; color: var(--text-muted); italic">Not Assigned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ issue.created_at[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('issue_details', issue_id=issue.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-eye"></i> View Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <i class="fa-solid fa-clipboard-check" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+        <h2>No Issues Reported Yet</h2>
+        <p style="margin-top: 0.5rem; margin-bottom: 1.5rem;">Have you noticed a broken light, plumbing leak, or network problem?</p>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus-circle"></i> Report An Issue Now
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

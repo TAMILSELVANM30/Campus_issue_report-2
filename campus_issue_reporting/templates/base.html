@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campus Issue Tracker{% endblock %}</title>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    {% if current_user %}
+    <!-- TOP NAVBAR -->
+    <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button class="mobile-menu-btn" id="mobileSidebarToggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="topbar-brand">
+                <i class="fa-solid fa-building-circle-check"></i>
+                <span>Campus Tracker</span>
+            </a>
+        </div>
+
+        <div class="topbar-right">
+            <a href="{{ url_for('notifications') }}" class="nav-notification" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                {% if unread_notifications_count > 0 %}
+                <span class="notification-badge">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+
+            <div class="user-badge">
+                <i class="fa-solid fa-user-circle"></i>
+                <span>{{ current_user.name }}</span>
+                <span class="user-role-tag">{{ current_user.role }}</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="sidebar" id="appSidebar">
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                {% if current_user.role in ['Student', 'Faculty'] %}
+                <li>
+                    <a href="{{ url_for('report_issue') }}" class="{% if request.endpoint == 'report_issue' %}active{% endif %}">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span>Report Issue</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('my_issues') }}" class="{% if request.endpoint == 'my_issues' %}active{% endif %}">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>My Issues</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if current_user.role in ['Manager', 'Maintenance Staff'] %}
+                <li>
+                    <a href="{{ url_for('all_issues') }}" class="{% if request.endpoint == 'all_issues' %}active{% endif %}">
+                        <i class="fa-solid fa-tasks"></i>
+                        <span>All Campus Issues</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li>
+                    <a href="{{ url_for('notifications') }}" class="{% if request.endpoint == 'notifications' %}active{% endif %}">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Notifications</span>
+                        {% if unread_notifications_count > 0 %}
+                        <span style="background: #e74c3c; color: #fff; padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto;">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}active{% endif %}">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span>Profile & Settings</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" style="color: #e74c3c; display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem 1rem; text-decoration: none; font-size: 0.95rem; border-radius: 8px;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            <!-- FLASH MESSAGES CONTAINER -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-messages">
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span><i class="fa-solid fa-circle-info" style="margin-right: 8px;"></i>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color:inherit; font-size: 1.1rem;">&times;</button>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% else %}
+    <!-- AUTH PAGES (LOGIN / REGISTER) -->
+    <div class="auth-body">
+        {% block auth_content %}{% endblock %}
+    </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

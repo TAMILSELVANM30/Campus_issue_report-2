@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}All Campus Issues - Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">All Campus Issues & Reported Problems</h1>
+        <p class="page-subtitle">Search, filter, view details, assign, and resolve all reported college problems</p>
+    </div>
+</div>
+
+<!-- SEARCH AND FILTER BAR -->
+<div class="filter-bar">
+    <form action="{{ url_for('all_issues') }}" method="GET" class="filter-form">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="q">Search Query</label>
+            <input type="text" id="q" name="q" class="form-control" placeholder="Search ID, reporter, location, text..." value="{{ search_query }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="category">Category</label>
+            <select id="category" name="category" class="form-select">
+                <option value="">All Categories</option>
+                <option value="Electrical" {% if category_filter == 'Electrical' %}selected{% endif %}>Electrical</option>
+                <option value="Plumbing" {% if category_filter == 'Plumbing' %}selected{% endif %}>Plumbing</option>
+                <option value="Furniture" {% if category_filter == 'Furniture' %}selected{% endif %}>Furniture</option>
+                <option value="IT / Network" {% if category_filter == 'IT / Network' %}selected{% endif %}>IT / Network</option>
+                <option value="Cleaning & Sanitation" {% if category_filter == 'Cleaning & Sanitation' %}selected{% endif %}>Cleaning & Sanitation</option>
+                <option value="Building & Repair" {% if category_filter == 'Building & Repair' %}selected{% endif %}>Building & Repair</option>
+                <option value="Air Conditioning" {% if category_filter == 'Air Conditioning' %}selected{% endif %}>Air Conditioning</option>
+                <option value="Other" {% if category_filter == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="status">Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Assigned" {% if status_filter == 'Assigned' %}selected{% endif %}>Assigned</option>
+                <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="priority">Priority</label>
+            <select id="priority" name="priority" class="form-select">
+                <option value="">All Priorities</option>
+                <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
+                <option value="Medium" {% if priority_filter == 'Medium' %}selected{% endif %}>Medium</option>
+                <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High</option>
+                <option value="Urgent" {% if priority_filter == 'Urgent' %}selected{% endif %}>Urgent</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <i class="fa-solid fa-filter"></i> Filter
+            </button>
+            <a href="{{ url_for('all_issues') }}" class="btn btn-secondary" title="Reset Filters">
+                <i class="fa-solid fa-rotate-left"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- ISSUES LIST TABLE -->
+<div class="card">
+    {% if issues %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Reporter</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Assigned Staff</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr>
+                    <td><strong>#{{ issue.id }}</strong></td>
+                    <td>
+                        {{ issue.student_name }}
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ issue.reporter_role if issue.reporter_role else '' }}</div>
+                    </td>
+                    <td>{{ issue.category }}</td>
+                    <td>{{ issue.location }}</td>
+                    <td>
+                        <span class="badge badge-{{ issue.priority|lower }}">
+                            {{ issue.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ issue.status|lower|replace(' ', '-') }}">
+                            {{ issue.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if issue.assigned_staff_name %}
+                        <span style="font-size: 0.85rem;"><i class="fa-solid fa-user-gear"></i> {{ issue.assigned_staff_name }}</span>
+                        {% else %}
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ issue.created_at[:10] }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <a href="{{ url_for('issue_details', issue_id=issue.id) }}" class="btn btn-sm btn-primary" title="View & Manage">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                            <form action="{{ url_for('delete_issue', issue_id=issue.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete Issue #{{ issue.id }}?');">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Delete Issue">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #cbd5e1;"></i>
+        <h3>No Issues Found</h3>
+        <p>No campus issues match your search criteria or filter options.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
