@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: campus-issue-reporting
+    runtime: python
+    rootDir: campus_issue_reporting
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MONGO_URI
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
